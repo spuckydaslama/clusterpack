@@ -30,3 +30,7 @@ export interface KCKubeConfig {
 	cluster: KCClusterType;
 	user: KCUserType;
 }
+
+export interface SelectedNamespacesPerCluster {
+	[key: string]: string[];
+}

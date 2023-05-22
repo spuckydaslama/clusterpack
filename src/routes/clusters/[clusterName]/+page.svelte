@@ -2,7 +2,7 @@
 	import { page } from '$app/stores';
 	import { ListBox, ListBoxItem, ProgressRadial } from '@skeletonlabs/skeleton';
 	import { onDestroy, onMount } from 'svelte';
-	import { kubeConfigStore } from '$lib/stores';
+	import { kubeConfigStore, recentlySelectedNamespaces } from '$lib/stores';
 	import type { KCDeploymentOrStatefulSet } from '$lib/types';
 	import { isUniquePredicate } from '$lib/utils/arrays';
 	import { getStatusColor } from '$lib/utils/statusColor';
@@ -12,10 +12,13 @@
 		return window.btoa(JSON.stringify($kubeConfigStore[clusterName]));
 	};
 
+	let namespaceListBoxState = [] as string[];
 	let namespaces = [] as string[];
-	let selectedNamespaces = [] as string[];
 	let workloads: KCDeploymentOrStatefulSet[] = [];
 	let fetchingWorkloadsInProgress = false;
+
+	$: selectedNamespaces =  $recentlySelectedNamespaces[$page.params.clusterName] || [] as string[];
+	$: namespaceListBoxState = selectedNamespaces;
 
 	$: orderedNamespaces = namespaces.sort((n1, n2) => {
 		if (selectedNamespaces.includes(n1) && !selectedNamespaces.includes(n2)) return -1;
@@ -55,6 +58,20 @@
 		updateWorkloadsTimeout = setTimeout(updateWorkloads, 10000) as unknown as number;
 	};
 
+	const namespaceSelectionChange = (event: Event & { currentTarget: HTMLInputElement }) => {
+		if (event.currentTarget.checked) {
+			$recentlySelectedNamespaces[$page.params.clusterName] = [
+				...selectedNamespaces,
+				event.currentTarget.value,
+			].filter(isUniquePredicate((namespace) => namespace));
+		} else {
+			$recentlySelectedNamespaces[$page.params.clusterName] = selectedNamespaces.filter(
+				(namespace) => namespace !== event.currentTarget.value
+			);
+		}
+
+	};
+
 	onMount(async () => {
 		const kubeConfig = encodeKubeConfig($page.params.clusterName);
 		const response = await fetch(`/api/namespaces?kubeConfig=${kubeConfig}`);
@@ -79,13 +96,15 @@
 	{/if}
 </div>
 <div class="flex gap-8">
-	<div class="w-1/5">
+	<div class="w-1/5 flex flex-col gap-2">
+		<h2 class="text-2xl text-secondary-300-600-token">Namespaces</h2>
 		<ListBox multiple>
 			{#each orderedNamespaces as namespace (namespace)}
 				<div animate:flip={{ duration: 250 }}>
 					<ListBoxItem
+						on:change={namespaceSelectionChange}
+						bind:group={namespaceListBoxState}
 						padding="p-1"
-						bind:group={selectedNamespaces}
 						name="namespace"
 						value={namespace}
 					>
