@@ -7,17 +7,17 @@
 	import { isUniquePredicate } from '$lib/utils/arrays';
 	import { getStatusColor } from '$lib/utils/statusColor';
 	import { flip } from 'svelte/animate';
+	import { fly } from 'svelte/transition';
 
 	const encodeKubeConfig = (clusterName: string) => {
 		return window.btoa(JSON.stringify($kubeConfigStore[clusterName]));
 	};
 
-	let namespaceListBoxState = [] as string[];
 	let namespaces = [] as string[];
 	let workloads: KCDeploymentOrStatefulSet[] = [];
 	let fetchingWorkloadsInProgress = false;
 
-	$: selectedNamespaces =  $recentlySelectedNamespaces[$page.params.clusterName] || [] as string[];
+	$: selectedNamespaces = $recentlySelectedNamespaces[$page.params.clusterName] || ([] as string[]);
 	$: namespaceListBoxState = selectedNamespaces;
 
 	$: orderedNamespaces = namespaces.sort((n1, n2) => {
@@ -62,20 +62,25 @@
 		if (event.currentTarget.checked) {
 			$recentlySelectedNamespaces[$page.params.clusterName] = [
 				...selectedNamespaces,
-				event.currentTarget.value,
+				event.currentTarget.value
 			].filter(isUniquePredicate((namespace) => namespace));
 		} else {
 			$recentlySelectedNamespaces[$page.params.clusterName] = selectedNamespaces.filter(
 				(namespace) => namespace !== event.currentTarget.value
 			);
 		}
+	};
 
+	let namespaceDrawerOpen = false;
+	const namespaceDrawerClicked = () => {
+		namespaceDrawerOpen = !namespaceDrawerOpen;
 	};
 
 	onMount(async () => {
 		const kubeConfig = encodeKubeConfig($page.params.clusterName);
 		const response = await fetch(`/api/namespaces?kubeConfig=${kubeConfig}`);
 		namespaces = await response.json();
+		namespaceDrawerOpen = selectedNamespaces.length === 0;
 		await updateWorkloads();
 	});
 
@@ -95,26 +100,72 @@
 		<ProgressRadial width="w-6" />
 	{/if}
 </div>
-<div class="flex gap-8">
-	<div class="w-1/5 flex flex-col gap-2">
-		<h2 class="text-2xl text-secondary-300-600-token">Namespaces</h2>
-		<ListBox multiple>
-			{#each orderedNamespaces as namespace (namespace)}
-				<div animate:flip={{ duration: 250 }}>
-					<ListBoxItem
-						on:change={namespaceSelectionChange}
-						bind:group={namespaceListBoxState}
-						padding="p-1"
-						name="namespace"
-						value={namespace}
-					>
-						{namespace}
-					</ListBoxItem>
-				</div>
-			{/each}
-		</ListBox>
+<div class="flex gap-4">
+	<div class="flex flex-col gap-2">
+		<div class="flex items-center">
+			{#if namespaceDrawerOpen}
+				<h2 class="grow text-2xl text-secondary-300-600-token" transition:fly={{ x: '-100%' }}>
+					Namespaces
+				</h2>
+			{/if}
+			<div class="relative inline-block">
+				<span class:hidden={namespaceDrawerOpen} class="badge-icon variant-filled-surface absolute -top-0 -right-0 z-10">{selectedNamespaces.length}</span>
+				<button
+						type="button"
+						class="btn-icon text-secondary-300-600-token"
+						on:click={namespaceDrawerClicked}
+				>
+					{#if namespaceDrawerOpen}
+						<svg
+								xmlns="http://www.w3.org/2000/svg"
+								viewBox="0 0 24 24"
+								fill="currentColor"
+								class="w-8 h-8"
+						>
+							<path
+									fill-rule="evenodd"
+									d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zm-4.28 9.22a.75.75 0 000 1.06l3 3a.75.75 0 101.06-1.06l-1.72-1.72h5.69a.75.75 0 000-1.5h-5.69l1.72-1.72a.75.75 0 00-1.06-1.06l-3 3z"
+									clip-rule="evenodd"
+							/>
+						</svg>
+					{:else}
+						<svg
+								xmlns="http://www.w3.org/2000/svg"
+								viewBox="0 0 24 24"
+								fill="currentColor"
+								class="w-8 h-8"
+						>
+							<path
+									fill-rule="evenodd"
+									d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zm4.28 10.28a.75.75 0 000-1.06l-3-3a.75.75 0 10-1.06 1.06l1.72 1.72H8.25a.75.75 0 000 1.5h5.69l-1.72 1.72a.75.75 0 101.06 1.06l3-3z"
+									clip-rule="evenodd"
+							/>
+						</svg>
+					{/if}
+				</button>
+			</div>
+		</div>
+		{#if namespaceDrawerOpen}
+			<div transition:fly={{ x: '-100%' }}>
+				<ListBox multiple>
+					{#each orderedNamespaces as namespace (namespace)}
+						<div animate:flip={{ duration: 250 }}>
+							<ListBoxItem
+								on:change={namespaceSelectionChange}
+								bind:group={namespaceListBoxState}
+								padding="p-1"
+								name="namespace"
+								value={namespace}
+							>
+								{namespace}
+							</ListBoxItem>
+						</div>
+					{/each}
+				</ListBox>
+			</div>
+		{/if}
 	</div>
-	<div class="grow grid grid-cols-4 auto-rows-min gap-4">
+	<div class="grow grid grid-cols-4 auto-rows-min gap-4 mx-4">
 		{#each workloads as workload}
 			{@const replicaStatus = `${workload.status?.readyReplicas || '0'} / ${
 				workload.spec?.replicas !== undefined ? workload.spec.replicas : '?'
