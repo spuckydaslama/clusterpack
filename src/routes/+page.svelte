@@ -48,8 +48,11 @@
 							/>
 						</svg>
 					</i>
-					Gimme your kube-config
+					Gimme your kube-configs
 				</div>
+			</svelte:fragment>
+			<svelte:fragment slot="meta">
+				one cluster/user per file
 			</svelte:fragment>
 		</FileDropzone>
 	</div>
