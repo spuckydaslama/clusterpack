@@ -52,7 +52,7 @@
 			workloads = [];
 		}
 		fetchingWorkloadsInProgress = false;
-		updateWorkloadsTimeout = setTimeout(updateWorkloads, 1000) as unknown as number;
+		updateWorkloadsTimeout = setTimeout(updateWorkloads, 10000) as unknown as number;
 	};
 
 	onMount(async () => {
