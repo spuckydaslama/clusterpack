@@ -2,6 +2,7 @@
 	import { FileDropzone } from '@skeletonlabs/skeleton';
 	import type { KCKubeConfig } from '$lib/types';
 	import { kubeConfigStore } from '$lib/stores';
+	import ClusterCard from '$lib/components/overview/ClusterCard.svelte';
 
 	let files: FileList;
 	const onKubeConfigUploaded = async () => {
@@ -24,14 +25,18 @@
 	$: clusterNames = Object.keys($kubeConfigStore).map((key) => $kubeConfigStore[key].cluster.name);
 </script>
 
-<div class="container h-full mx-auto flex justify-center items-center gap-2">
+<div class="container mx-auto grid grid-cols-4 auto-cols-max gap-2">
 	{#each clusterNames as clusterName}
-		<a href={`/clusters/${clusterName}`} class="card card-hover p-4">
-			{clusterName}
-		</a>
+		<ClusterCard {clusterName} />
 	{/each}
 	<div class="card">
-		<FileDropzone padding="p-4" name="kubeConfigFile" bind:files on:change={onKubeConfigUploaded}>
+		<FileDropzone
+			class="h-full"
+			padding="p-4"
+			name="kubeConfigFile"
+			bind:files
+			on:change={onKubeConfigUploaded}
+		>
 			<svelte:fragment slot="message">
 				<div class="flex gap-2">
 					<i class="text-4xl text-secondary-400-500-token">

@@ -2,19 +2,18 @@
 	import { page } from '$app/stores';
 	import { ListBox, ListBoxItem, ProgressRadial, RangeSlider } from '@skeletonlabs/skeleton';
 	import { onDestroy, onMount } from 'svelte';
-	import { kubeConfigStore, recentlySelectedNamespaces } from '$lib/stores';
+	import { recentlySelectedNamespaces } from '$lib/stores';
 	import type { KCDeploymentOrStatefulSet } from '$lib/types';
 	import { isUniquePredicate } from '$lib/utils/arrays';
 	import { getStatusColor } from '$lib/utils/statusColor';
 	import { flip } from 'svelte/animate';
 	import { fly } from 'svelte/transition';
-
-	const encodeKubeConfig = (clusterName: string) => {
-		return window.btoa(JSON.stringify($kubeConfigStore[clusterName]));
-	};
+	import { fetchWorkloads } from '$lib/utils/fetchWorkloads';
+	import { getEncodedKubeConfig } from '$lib/utils/getEncodedKubeConfig';
 
 	let namespaces = [] as string[];
 	let workloads: KCDeploymentOrStatefulSet[] = [];
+	let error: Error | undefined;
 	let fetchingWorkloadsInProgress = false;
 
 	$: selectedNamespaces = $recentlySelectedNamespaces[$page.params.clusterName] || ([] as string[]);
@@ -34,24 +33,18 @@
 			abortUpdateWorkloads.abort();
 		}
 		if (selectedNamespaces.length) {
+			const kubeConfig = getEncodedKubeConfig($page.params.clusterName, window.btoa);
 			abortUpdateWorkloads = new AbortController();
-			const kubeConfig = encodeKubeConfig($page.params.clusterName);
 			fetchingWorkloadsInProgress = true;
-			const response = await fetch(
-				`/api/workloads?namespaces=${selectedNamespaces.join(',')}&kubeConfig=${kubeConfig}`,
-				{ signal: (abortUpdateWorkloads?.signal || null) as AbortSignal }
+			const { workloads: newWorkloads, error: newError } = await fetchWorkloads(
+				kubeConfig,
+				selectedNamespaces,
+				(abortUpdateWorkloads?.signal || null) as AbortSignal
 			);
-			const newWorkloads = (await response.json()) as KCDeploymentOrStatefulSet[];
-			workloads = newWorkloads
-				.filter((workload) => workload?.metadata?.name)
-				.filter(isUniquePredicate((workload) => workload.metadata?.uid))
-				.filter((workload) => selectedNamespaces.includes(workload.metadata?.namespace || ''))
-				.sort((w1, w2) => {
-					if (w1.metadata?.uid === undefined || w2.metadata?.uid === undefined) {
-						return w1.metadata?.uid === undefined ? -1 : 1;
-					}
-					return w1.metadata.uid.localeCompare(w2.metadata.uid);
-				});
+			if (!newError) {
+				workloads = newWorkloads;
+			}
+			error = newError;
 		} else {
 			workloads = [];
 		}
@@ -82,7 +75,7 @@
 	};
 
 	onMount(async () => {
-		const kubeConfig = encodeKubeConfig($page.params.clusterName);
+		const kubeConfig = getEncodedKubeConfig($page.params.clusterName, window.btoa);
 		const response = await fetch(`/api/namespaces?kubeConfig=${kubeConfig}`);
 		namespaces = await response.json();
 		namespaceDrawerOpen = selectedNamespaces.length === 0;
@@ -114,6 +107,9 @@
 			/>
 		</div>
 		<div>{timeoutInSeconds}s</div>
+		{#if error}
+			<div class="badge variant-filled-error">error</div>
+		{/if}
 		{#if fetchingWorkloadsInProgress}
 			<ProgressRadial width="w-6" />
 		{/if}

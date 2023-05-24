@@ -1,4 +1,7 @@
-export const getStatusColor = (readyReplicas: number, replicas: number | undefined): string => {
+export const getStatusColor = (
+	readyReplicas: number,
+	replicas: number | undefined
+): 'surface' | 'error' | 'warning' | 'success' => {
 	if (replicas === undefined) {
 		return 'surface';
 	} else if (readyReplicas === 0 || replicas === 0) {
