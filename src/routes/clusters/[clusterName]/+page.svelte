@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/stores';
-	import { ListBox, ListBoxItem, ProgressRadial } from '@skeletonlabs/skeleton';
+	import { ListBox, ListBoxItem, ProgressRadial, RangeSlider } from '@skeletonlabs/skeleton';
 	import { onDestroy, onMount } from 'svelte';
 	import { kubeConfigStore, recentlySelectedNamespaces } from '$lib/stores';
 	import type { KCDeploymentOrStatefulSet } from '$lib/types';
@@ -28,6 +28,7 @@
 
 	let updateWorkloadsTimeout: number;
 	let abortUpdateWorkloads: AbortController | undefined;
+	let timeoutInSeconds = 10;
 	const updateWorkloads = async () => {
 		if (abortUpdateWorkloads) {
 			abortUpdateWorkloads.abort();
@@ -43,7 +44,7 @@
 			const newWorkloads = (await response.json()) as KCDeploymentOrStatefulSet[];
 			workloads = newWorkloads
 				.filter((workload) => workload?.metadata?.name)
-				.filter(isUniquePredicate((workload) => workload.metadata?.name))
+				.filter(isUniquePredicate((workload) => workload.metadata?.uid))
 				.filter((workload) => selectedNamespaces.includes(workload.metadata?.namespace || ''))
 				.sort((w1, w2) => {
 					if (w1.metadata?.uid === undefined || w2.metadata?.uid === undefined) {
@@ -55,11 +56,14 @@
 			workloads = [];
 		}
 		fetchingWorkloadsInProgress = false;
-		updateWorkloadsTimeout = setTimeout(updateWorkloads, 10000) as unknown as number;
+		updateWorkloadsTimeout = setTimeout(
+			updateWorkloads,
+			timeoutInSeconds * 1000
+		) as unknown as number;
 	};
 
-	const namespaceSelectionChange = (event: Event) => {
-		const eventTarget = event.currentTarget as HTMLInputElement;
+	const namespaceSelectionClicked = (event: Event) => {
+		const eventTarget = event.target as HTMLInputElement;
 		if (eventTarget.checked) {
 			$recentlySelectedNamespaces[$page.params.clusterName] = [
 				...selectedNamespaces,
@@ -97,9 +101,23 @@
 
 <div class="flex items-center gap-4">
 	<h1 class="text-4xl pb-3 text-primary-300-600-token">{$page.params.clusterName}</h1>
-	{#if fetchingWorkloadsInProgress}
-		<ProgressRadial width="w-6" />
-	{/if}
+	<div class="flex items-center gap-2">
+		<div>Polling interval in</div>
+		<div>
+			<RangeSlider
+				name="range-slider"
+				accent="filled-secondary-300"
+				bind:value={timeoutInSeconds}
+				max={60}
+				min={1}
+				step={1}
+			/>
+		</div>
+		<div>{timeoutInSeconds}s</div>
+		{#if fetchingWorkloadsInProgress}
+			<ProgressRadial width="w-6" />
+		{/if}
+	</div>
 </div>
 <div class="flex gap-4">
 	<div class="flex flex-col gap-2">
@@ -156,7 +174,7 @@
 					{#each orderedNamespaces as namespace (namespace)}
 						<div animate:flip={{ duration: 250 }}>
 							<ListBoxItem
-								on:change={namespaceSelectionChange}
+								on:click={namespaceSelectionClicked}
 								bind:group={namespaceListBoxState}
 								padding="p-1"
 								name="namespace"
@@ -170,29 +188,33 @@
 			</div>
 		{/if}
 	</div>
-	<div class="grow grid grid-cols-4 auto-rows-min gap-4 mx-4">
+	<div
+		class="grow grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 auto-rows-min gap-4 mx-4"
+	>
 		{#each workloads as workload}
-			{@const replicaStatus = `${workload.status?.readyReplicas || '0'} / ${
-				workload.spec?.replicas !== undefined ? workload.spec.replicas : '?'
-			} `}
+			{@const readyReplicas = workload.status?.readyReplicas || '0'}
+			{@const replicas = workload.spec?.replicas !== undefined ? workload.spec.replicas : '?'}
 			{@const backgroundColor = `bg-${getStatusColor(
 				workload.status?.readyReplicas || 0,
 				workload.spec?.replicas
 			)}-100-800-token`}
 			<div class={'card card-hover p-1 ' + backgroundColor}>
-				<header>
+				<header class="flex flex-col">
 					<div class="flex items-center">
-						<span class="grow text-xl text-center">{workload.metadata?.name || '?'}</span>
-						<span class="text-xs">{replicaStatus}</span>
+						<span class="grow text-lg text-center">{workload.metadata?.name || '?'}</span>
+						<span class="text-xs">{readyReplicas}/{replicas}</span>
+					</div>
+					<div class="flex justify-center">
+						<span class="text-xs">{workload.metadata?.namespace}</span>
 					</div>
 				</header>
 				<section>
-					<div class="flex flex-col gap-1">
+					<div class="flex">
 						{#if workload.spec?.template?.spec?.containers?.length}
 							{#each workload.spec?.template?.spec?.containers as container}
 								<span
 									title={(container.image && container.image.split(':')[0]) || '?'}
-									class="bold text-sm text-orange-500"
+									class="bold text-sm text-orange-500 after:content-['|'] last:after:content-['']"
 								>
 									{(container.image && container.image.split(':')[1]) || '?'}
 								</span>
