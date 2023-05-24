@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="20.4mm"
+   height="20.4mm"
+   viewBox="0 0 20.399998 20.399999"
+   version="1.1"
+   id="svg5"
+   inkscape:version="1.2.2 (b0a8486541, 2022-12-01)"
+   sodipodi:docname="logo.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     showgrid="false"
+     showborder="false"
+     inkscape:zoom="9.5144351"
+     inkscape:cx="15.870622"
+     inkscape:cy="33.948416"
+     inkscape:window-width="1920"
+     inkscape:window-height="1027"
+     inkscape:window-x="1920"
+     inkscape:window-y="26"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs2" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-113.57539,-130.85069)">
+    <g
+       id="g330"
+       transform="translate(0.55692066,0.23949665)">
+      <rect
+         style="fill:#47947d;fill-opacity:1;stroke:none;stroke-width:12.3135"
+         id="rect1742"
+         width="10"
+         height="10"
+         x="113.01847"
+         y="130.61119"
+         ry="1.4988072" />
+      <text
+         xml:space="preserve"
+         style="font-size:9.3372px;line-height:1.25;font-family:Roboto;-inkscape-font-specification:Roboto;text-align:center;text-anchor:middle;stroke-width:0.23343"
+         x="120.54195"
+         y="135.85823"
+         id="text1816"
+         transform="scale(0.97734666,1.0231784)"><tspan
+           sodipodi:role="line"
+           id="tspan1814"
+           style="stroke-width:0.23343"
+           x="120.54195"
+           y="135.85823">P</tspan></text>
+    </g>
+    <g
+       id="g315"
+       transform="translate(-0.68402516,0.23949665)">
+      <rect
+         style="fill:#47947d;fill-opacity:1;stroke:none;stroke-width:12.3135"
+         id="rect1750"
+         width="10"
+         height="10"
+         x="124.65942"
+         y="130.61119"
+         ry="1.4988072" />
+      <text
+         xml:space="preserve"
+         style="font-size:9.3372px;line-height:1.25;font-family:Roboto;-inkscape-font-specification:Roboto;text-align:center;text-anchor:middle;stroke-width:0.23343"
+         x="132.66243"
+         y="135.85823"
+         id="text1870"
+         transform="scale(0.97734666,1.0231784)"><tspan
+           sodipodi:role="line"
+           id="tspan1868"
+           style="stroke-width:0.23343"
+           x="132.66243"
+           y="135.85823">A</tspan></text>
+    </g>
+    <g
+       id="g325"
+       transform="translate(0.55692066,-1.0014492)">
+      <rect
+         style="fill:#47947d;fill-opacity:1;stroke:none;stroke-width:12.3135"
+         id="rect1752"
+         width="10"
+         height="10"
+         x="113.01847"
+         y="142.25214"
+         ry="1.4988072" />
+      <text
+         xml:space="preserve"
+         style="font-size:9.3372px;line-height:1.25;font-family:Roboto;-inkscape-font-specification:Roboto;text-align:center;text-anchor:middle;stroke-width:0.23343"
+         x="120.69468"
+         y="147.23547"
+         id="text1874"
+         transform="scale(0.97734666,1.0231784)"><tspan
+           sodipodi:role="line"
+           id="tspan1872"
+           style="stroke-width:0.23343"
+           x="120.69468"
+           y="147.23547">C</tspan></text>
+    </g>
+    <g
+       id="g320"
+       transform="translate(-0.68402516,-1.0014492)">
+      <rect
+         style="fill:#a26175;fill-opacity:1;stroke:none;stroke-width:12.3135"
+         id="rect1754"
+         width="10"
+         height="10"
+         x="124.65942"
+         y="142.25214"
+         ry="1.4988072" />
+      <text
+         xml:space="preserve"
+         style="font-size:9.3372px;line-height:1.25;font-family:Roboto;-inkscape-font-specification:Roboto;text-align:center;text-anchor:middle;fill:#ffffff;stroke-width:0.23343"
+         x="132.27719"
+         y="147.23547"
+         id="text1878"
+         transform="scale(0.97734666,1.0231784)"><tspan
+           sodipodi:role="line"
+           id="tspan1876"
+           style="fill:#ffffff;stroke-width:0.23343"
+           x="132.27719"
+           y="147.23547">K</tspan></text>
+    </g>
+  </g>
+</svg>
