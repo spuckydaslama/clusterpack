@@ -65,7 +65,12 @@
 </script>
 
 <a href={`/clusters/${clusterName}`} class="card p-4 flex flex-col">
-	<div>{clusterName} ({selectedNamespaces?.length})</div>
+	<div>
+		{clusterName}
+		<span title={`${selectedNamespaces?.length} selected namespaces in this cluster`}
+			>({selectedNamespaces?.length})</span
+		>
+	</div>
 	<div>
 		{#if !error && selectedNamespaces?.length > 0 && workloads?.length === 0}
 			{#each [...Array(Math.floor((2 + Math.random() * 3) * selectedNamespaces?.length)).keys()] as item (item)}
