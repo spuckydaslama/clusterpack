@@ -2,7 +2,7 @@
 	import { FileDropzone } from '@skeletonlabs/skeleton';
 	import type { KCKubeConfig } from '$lib/types';
 	import { kubeConfigStore } from '$lib/stores';
-	import ClusterCard from '$lib/components/overview/ClusterCard.svelte';
+	import ClusterCard from './ClusterCard.svelte';
 
 	let files: FileList;
 	const onKubeConfigUploaded = async () => {

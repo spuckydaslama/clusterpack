@@ -1,7 +1,7 @@
-import type { KCDeploymentOrStatefulSet } from '$lib/types';
+import type { Workload } from '$lib/types';
 import { isUniquePredicate } from '$lib/utils/arrays';
 
-type ApiResponse = KCDeploymentOrStatefulSet[] | Error;
+type ApiResponse = Workload[] | Error;
 
 export const fetchWorkloads = async (
 	encodedKubeConfig: string,
@@ -20,7 +20,7 @@ export const fetchWorkloads = async (
 		};
 	}
 	return {
-		workloads: (apiResponse as KCDeploymentOrStatefulSet[])
+		workloads: (apiResponse as Workload[])
 			.filter((workload) => workload?.metadata?.name)
 			.filter(isUniquePredicate((workload) => workload.metadata?.uid))
 			.filter((workload) => namespaces.includes(workload.metadata?.namespace || ''))

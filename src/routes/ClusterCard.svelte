@@ -1,14 +1,16 @@
 <script lang="ts">
 	import { recentlySelectedNamespaces } from '$lib/stores';
-	import type { KCDeploymentOrStatefulSet } from '$lib/types';
+	import type { Workload } from '$lib/types';
 	import { onDestroy, onMount } from 'svelte';
-	import { getStatusColor } from '$lib/utils/statusColor';
 	import { getEncodedKubeConfig } from '$lib/utils/getEncodedKubeConfig';
 	import { fetchWorkloads } from '$lib/utils/fetchWorkloads';
+	import ErrorBadge from '$lib/components/atoms/ErrorBadge.svelte';
+	import WorkloadBadge from './WorkloadBadge.svelte';
+	import WorkloadBadgesSkeleton from './WorkloadBadgesSkeleton.svelte';
 
 	export let clusterName: string;
 
-	let workloads: KCDeploymentOrStatefulSet[] = [];
+	let workloads: Workload[] = [];
 	let error: Error | undefined;
 
 	$: selectedNamespaces =
@@ -45,6 +47,7 @@
 
 	let firstUpdateWorkloadsTimeout: number;
 	onMount(() => {
+		// I don't want to fetch all workloads at the same time, when multiple clusters are visible
 		firstUpdateWorkloadsTimeout = setTimeout(
 			updateWorkloads,
 			Math.floor(Math.random() * 20000)
@@ -67,28 +70,19 @@
 <a href={`/clusters/${clusterName}`} class="card p-4 flex flex-col">
 	<div>
 		{clusterName}
-		<span title={`${selectedNamespaces?.length} selected namespaces in this cluster`}
-			>({selectedNamespaces?.length})</span
-		>
+		<span title={`${selectedNamespaces?.length} selected namespaces in this cluster`}>
+			({selectedNamespaces?.length})
+		</span>
 	</div>
 	<div>
 		{#if !error && selectedNamespaces?.length > 0 && workloads?.length === 0}
-			{#each [...Array(Math.floor((2 + Math.random() * 3) * selectedNamespaces?.length)).keys()] as item (item)}
-				<div class="badge variant-filled-surface animate-pulse p-1.5 mx-0.5" />
-			{/each}
+			<WorkloadBadgesSkeleton length={selectedNamespaces.length} />
 		{/if}
 		{#each workloads as workload}
-			{@const status = getStatusColor(workload.status?.readyReplicas || 0, workload.spec?.replicas)}
-			<div
-				class:variant-filled-error={status === 'error'}
-				class:variant-filled-success={status === 'success'}
-				class:variant-filled-surface={status === 'surface'}
-				class:variant-filled-warning={status === 'warning'}
-				class="badge p-2 mx-0.5"
-			/>
+			<WorkloadBadge {workload} />
 		{/each}
 		{#if error}
-			<div class="badge variant-filled-error">error</div>
+			<ErrorBadge>error</ErrorBadge>
 		{/if}
 	</div>
 </a>

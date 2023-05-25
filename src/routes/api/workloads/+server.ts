@@ -9,7 +9,6 @@ export const GET: RequestHandler = async ({ url }) => {
 		.get('namespaces')
 		?.split(',')
 		.filter((s) => s?.length > 0);
-	console.log('namespaces', namespaces);
 	if (!kubeConfig || !namespaces || namespaces.length === 0) {
 		return json([]);
 	}
@@ -21,6 +20,7 @@ export const GET: RequestHandler = async ({ url }) => {
 	const statefulSetResponses = await Promise.all(
 		namespaces.map((namespace) => appsV1Api.listNamespacedStatefulSet(namespace))
 	);
+
 	return json([
 		...deploymentResponses.flatMap((response) => response.body.items),
 		...statefulSetResponses.flatMap((response) => response.body.items)

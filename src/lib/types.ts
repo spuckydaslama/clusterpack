@@ -20,10 +20,14 @@ export interface KCUserType {
 	readonly password?: string;
 }
 
-export interface KCDeploymentOrStatefulSet {
+export interface WorkloadContainer {
+	image?: string;
+}
+
+export interface Workload {
 	metadata?: { name?: string; namespace?: string; uid?: string };
 	status?: { readyReplicas?: number };
-	spec?: { replicas?: number; template?: { spec?: { containers?: Array<{ image?: string }> } } };
+	spec?: { replicas?: number; template?: { spec?: { containers?: Array<WorkloadContainer> } } };
 }
 
 export interface KCKubeConfig {

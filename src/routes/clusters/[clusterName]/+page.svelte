@@ -1,18 +1,20 @@
 <script lang="ts">
 	import { page } from '$app/stores';
-	import { ListBox, ListBoxItem, ProgressRadial, RangeSlider } from '@skeletonlabs/skeleton';
 	import { onDestroy, onMount } from 'svelte';
 	import { recentlySelectedNamespaces } from '$lib/stores';
-	import type { KCDeploymentOrStatefulSet } from '$lib/types';
+	import type { Workload } from '$lib/types';
 	import { isUniquePredicate } from '$lib/utils/arrays';
-	import { getStatusColor } from '$lib/utils/statusColor';
-	import { flip } from 'svelte/animate';
 	import { fly } from 'svelte/transition';
 	import { fetchWorkloads } from '$lib/utils/fetchWorkloads';
 	import { getEncodedKubeConfig } from '$lib/utils/getEncodedKubeConfig';
+	import NamespaceListBox from './NamespaceListBox.svelte';
+	import type { NamespaceSelectionChangeEventDetail } from './types';
+	import Polling from './Polling.svelte';
+	import NamespaceDrawerButton from './NamespaceDrawerButton.svelte';
+	import WorkloadsGrid from './WorkloadsGrid.svelte';
 
 	let namespaces = [] as string[];
-	let workloads: KCDeploymentOrStatefulSet[] = [];
+	let workloads: Workload[] = [];
 	let error: Error | undefined;
 	let fetchingWorkloadsInProgress = false;
 
@@ -55,16 +57,16 @@
 		) as unknown as number;
 	};
 
-	const namespaceSelectionClicked = (event: Event) => {
-		const eventTarget = event.target as HTMLInputElement;
-		if (eventTarget.checked) {
+	const namespaceSelectionChanged = (event: CustomEvent<NamespaceSelectionChangeEventDetail>) => {
+		const eventDetail = event.detail;
+		if (eventDetail.selected) {
 			$recentlySelectedNamespaces[$page.params.clusterName] = [
 				...selectedNamespaces,
-				eventTarget.value
+				eventDetail.namespace
 			].filter(isUniquePredicate((namespace) => namespace));
 		} else {
 			$recentlySelectedNamespaces[$page.params.clusterName] = selectedNamespaces.filter(
-				(namespace) => namespace !== eventTarget.value
+				(namespace) => namespace !== eventDetail.namespace
 			);
 		}
 	};
@@ -74,12 +76,19 @@
 		namespaceDrawerOpen = !namespaceDrawerOpen;
 	};
 
-	onMount(async () => {
+	let fetchingNamespacesInProgress = false;
+	const fetchNamespaces = async () => {
+		fetchingNamespacesInProgress = true;
 		const kubeConfig = getEncodedKubeConfig($page.params.clusterName, window.btoa);
 		const response = await fetch(`/api/namespaces?kubeConfig=${kubeConfig}`);
 		namespaces = await response.json();
+		fetchingNamespacesInProgress = false;
+	};
+
+	onMount(() => {
+		fetchNamespaces();
 		namespaceDrawerOpen = selectedNamespaces.length === 0;
-		await updateWorkloads();
+		updateWorkloads();
 	});
 
 	onDestroy(() => {
@@ -94,26 +103,7 @@
 
 <div class="flex items-center gap-4">
 	<h1 class="text-4xl pb-3 text-primary-300-600-token">{$page.params.clusterName}</h1>
-	<div class="flex items-center gap-2">
-		<div>Polling interval in</div>
-		<div>
-			<RangeSlider
-				name="range-slider"
-				accent="filled-secondary-300"
-				bind:value={timeoutInSeconds}
-				max={60}
-				min={1}
-				step={1}
-			/>
-		</div>
-		<div>{timeoutInSeconds}s</div>
-		{#if error}
-			<div class="badge variant-filled-error">error</div>
-		{/if}
-		{#if fetchingWorkloadsInProgress}
-			<ProgressRadial width="w-6" />
-		{/if}
-	</div>
+	<Polling bind:timeoutInSeconds {error} pollingInProgress={fetchingWorkloadsInProgress} />
 </div>
 <div class="flex gap-4">
 	<div class="flex flex-col gap-2">
@@ -123,102 +113,22 @@
 					Namespaces
 				</h2>
 			{/if}
-			<div class="relative inline-block">
-				<span
-					class:hidden={namespaceDrawerOpen}
-					class="badge-icon variant-filled-surface absolute -top-0 -right-0 z-10"
-					>{selectedNamespaces.length}</span
-				>
-				<button
-					type="button"
-					class="btn-icon text-secondary-300-600-token"
-					on:click={namespaceDrawerClicked}
-				>
-					{#if namespaceDrawerOpen}
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							viewBox="0 0 24 24"
-							fill="currentColor"
-							class="w-8 h-8"
-						>
-							<path
-								fill-rule="evenodd"
-								d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zm-4.28 9.22a.75.75 0 000 1.06l3 3a.75.75 0 101.06-1.06l-1.72-1.72h5.69a.75.75 0 000-1.5h-5.69l1.72-1.72a.75.75 0 00-1.06-1.06l-3 3z"
-								clip-rule="evenodd"
-							/>
-						</svg>
-					{:else}
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							viewBox="0 0 24 24"
-							fill="currentColor"
-							class="w-8 h-8"
-						>
-							<path
-								fill-rule="evenodd"
-								d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zm4.28 10.28a.75.75 0 000-1.06l-3-3a.75.75 0 10-1.06 1.06l1.72 1.72H8.25a.75.75 0 000 1.5h5.69l-1.72 1.72a.75.75 0 101.06 1.06l3-3z"
-								clip-rule="evenodd"
-							/>
-						</svg>
-					{/if}
-				</button>
-			</div>
+			<NamespaceDrawerButton
+				on:click={namespaceDrawerClicked}
+				open={namespaceDrawerOpen}
+				count={selectedNamespaces.length}
+			/>
 		</div>
 		{#if namespaceDrawerOpen}
 			<div transition:fly={{ x: '-100%' }}>
-				<ListBox multiple>
-					{#each orderedNamespaces as namespace (namespace)}
-						<div animate:flip={{ duration: 250 }}>
-							<ListBoxItem
-								on:click={namespaceSelectionClicked}
-								bind:group={namespaceListBoxState}
-								padding="p-1"
-								name="namespace"
-								value={namespace}
-							>
-								{namespace}
-							</ListBoxItem>
-						</div>
-					{/each}
-				</ListBox>
+				<NamespaceListBox
+					fetchingInProgress={fetchingNamespacesInProgress}
+					namespaces={orderedNamespaces}
+					{namespaceListBoxState}
+					on:namespaceSelectionChanged={namespaceSelectionChanged}
+				/>
 			</div>
 		{/if}
 	</div>
-	<div
-		class="grow grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 auto-rows-min gap-4 mx-4"
-	>
-		{#each workloads as workload}
-			{@const readyReplicas = workload.status?.readyReplicas || '0'}
-			{@const replicas = workload.spec?.replicas !== undefined ? workload.spec.replicas : '?'}
-			{@const backgroundColor = `bg-${getStatusColor(
-				workload.status?.readyReplicas || 0,
-				workload.spec?.replicas
-			)}-100-800-token`}
-			<div class={'card card-hover p-1 ' + backgroundColor}>
-				<header class="flex flex-col">
-					<div class="flex items-center">
-						<span class="grow text-lg text-center">{workload.metadata?.name || '?'}</span>
-						<span class="text-xs">{readyReplicas}/{replicas}</span>
-					</div>
-					<div class="flex justify-center">
-						<span class="text-xs">{workload.metadata?.namespace}</span>
-					</div>
-				</header>
-				<section>
-					<div class="flex">
-						{#if workload.spec?.template?.spec?.containers?.length}
-							{#each workload.spec?.template?.spec?.containers as container}
-								<span
-									title={(container.image && container.image.split(':')[0]) || '?'}
-									class="bold text-sm text-orange-500 after:content-['|'] last:after:content-['']"
-								>
-									{(container.image && container.image.split(':')[1]) || '?'}
-								</span>
-							{/each}
-						{/if}
-					</div>
-				</section>
-			</div>
-		{/each}
-	</div>
+	<WorkloadsGrid {workloads} />
 </div>
