@@ -20,7 +20,7 @@ export const fetchWorkloads = async (
 		};
 	}
 	return {
-		workloads: (apiResponse as Workload[])
+		workloads: ((apiResponse as Workload[]) || [])
 			.filter((workload) => workload?.metadata?.name)
 			.filter(isUniquePredicate((workload) => workload.metadata?.uid))
 			.filter((workload) => namespaces.includes(workload.metadata?.namespace || ''))

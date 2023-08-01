@@ -13,7 +13,7 @@
 	import NamespaceDrawerButton from './NamespaceDrawerButton.svelte';
 	import WorkloadsGrid from './WorkloadsGrid.svelte';
 
-	let namespaces = [] as string[];
+	let namespaces: string[] | undefined = [] as string[];
 	let workloads: Workload[] = [];
 	let error: Error | undefined;
 	let fetchingWorkloadsInProgress = false;
@@ -21,7 +21,7 @@
 	$: selectedNamespaces = $recentlySelectedNamespaces[$page.params.clusterName] || ([] as string[]);
 	$: namespaceListBoxState = selectedNamespaces;
 
-	$: orderedNamespaces = namespaces.sort((n1, n2) => {
+	$: orderedNamespaces = (namespaces || []).sort((n1, n2) => {
 		if (selectedNamespaces.includes(n1) && !selectedNamespaces.includes(n2)) return -1;
 		if (!selectedNamespaces.includes(n1) && selectedNamespaces.includes(n2)) return 1;
 		return n1.localeCompare(n2);
