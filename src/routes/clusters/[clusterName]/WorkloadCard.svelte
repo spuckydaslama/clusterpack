@@ -5,9 +5,9 @@
 
 	export let workload: Workload;
 
-	let readyReplicas = workload?.status?.readyReplicas || '0';
-	let replicas = workload?.spec?.replicas !== undefined ? workload?.spec.replicas : '?';
-	let backgroundColor = `bg-${getStatusColor(
+	$:readyReplicas = workload?.status?.readyReplicas || '0';
+	$:replicas = workload?.spec?.replicas !== undefined ? workload?.spec.replicas : '?';
+	$:backgroundColor = `bg-${getStatusColor(
 		workload?.status?.readyReplicas || 0,
 		workload?.spec?.replicas
 	)}-100-800-token`;

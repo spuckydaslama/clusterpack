@@ -7,7 +7,7 @@
 <div
 	class="grow grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 auto-rows-min gap-4 mx-4"
 >
-	{#each workloads as workload}
+	{#each workloads as workload(workload.metadata?.uid)}
 		<WorkloadCard {workload} />
 	{/each}
 </div>

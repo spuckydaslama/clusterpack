@@ -78,7 +78,7 @@
 		{#if !error && selectedNamespaces?.length > 0 && workloads?.length === 0}
 			<WorkloadBadgesSkeleton length={selectedNamespaces.length} />
 		{/if}
-		{#each workloads as workload}
+		{#each workloads as workload(workload.metadata?.uid)}
 			<WorkloadBadge {workload} />
 		{/each}
 		{#if error}
